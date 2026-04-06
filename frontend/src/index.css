@@ -247,3 +247,41 @@ button {
   cursor: pointer;
   min-width: 150px;
 }
+
+/* --- Графіки (Стовпчики) --- */
+.chart-bar-wrap { padding: 16px 20px; }
+.bar-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  margin-bottom: 12px; 
+}
+.bar-label { 
+  font-size: 13px; 
+  color: var(--text-main); 
+  width: 140px; 
+  flex-shrink: 0; 
+}
+.bar-track { 
+  flex: 1; 
+  height: 24px; 
+  background: var(--bg-main); 
+  border-radius: 6px; 
+  overflow: hidden; 
+  border: 1px solid var(--border-color);
+}
+.bar-fill { 
+  height: 100%; 
+  border-radius: 4px; 
+  display: flex; 
+  align-items: center; 
+  padding-left: 10px; 
+  font-size: 12px; 
+  font-weight: 500; 
+  transition: width 0.5s ease-out;
+}
+
+/* Кольори стовпчиків */
+.bar-blue { background: rgba(0, 122, 204, 0.3); color: #9cd5ff; }
+.bar-green { background: rgba(76, 175, 80, 0.3); color: #a5d6a7; }
+.bar-amber { background: rgba(255, 152, 0, 0.3); color: #ffcc80; }
