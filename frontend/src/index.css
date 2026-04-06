@@ -217,3 +217,33 @@ button {
 .badge-ok { background: rgba(76, 175, 80, 0.15); color: #81c784; }
 .badge-warn { background: rgba(255, 152, 0, 0.15); color: #ffb74d; }
 .badge-danger { background: rgba(244, 67, 54, 0.15); color: #e57373; }
+
+/* --- Фільтри (Filter Bar) --- */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filter-bar input, 
+.filter-bar select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-bar input:focus, 
+.filter-bar select:focus {
+  border-color: var(--accent-blue);
+}
+
+/* Прибираємо стандартну стрілку select у деяких браузерах для красивішого вигляду */
+.filter-bar select {
+  cursor: pointer;
+  min-width: 150px;
+}
