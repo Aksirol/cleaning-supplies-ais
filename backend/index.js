@@ -1,4 +1,6 @@
 const express = require('express');
+const stockRoutes = require('./routes/stock');
+const analyticsRoutes = require('./routes/analytics');
 const purchasesRoutes = require('./routes/purchases');
 const expensesRoutes = require('./routes/expenses');
 const cors = require('cors');
@@ -21,6 +23,8 @@ app.use('/api/expenses', expensesRoutes);
 app.use('/api/suppliers', suppliersRoutes);
 app.use('/api/goods', goodsRoutes);
 app.use('/api/departments', departmentsRoutes);
+app.use('/api/stock', stockRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Базовий тестовий маршрут
 app.get('/api/status', (req, res) => {
