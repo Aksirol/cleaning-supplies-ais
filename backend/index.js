@@ -1,4 +1,6 @@
 const express = require('express');
+const purchasesRoutes = require('./routes/purchases');
+const expensesRoutes = require('./routes/expenses');
 const cors = require('cors');
 
 const app = express();
@@ -14,6 +16,8 @@ const goodsRoutes = require('./routes/goods');
 const departmentsRoutes = require('./routes/departments');
 
 // Використання маршрутів
+app.use('/api/purchases', purchasesRoutes);
+app.use('/api/expenses', expensesRoutes);
 app.use('/api/suppliers', suppliersRoutes);
 app.use('/api/goods', goodsRoutes);
 app.use('/api/departments', departmentsRoutes);
