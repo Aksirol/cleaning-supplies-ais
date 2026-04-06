@@ -182,3 +182,38 @@ button {
 }
 
 .form-control:focus { border-color: var(--accent-blue); }
+
+/* --- Дашборд та Статистика --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.stat-label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.stat-value { font-size: 24px; font-weight: 500; color: var(--text-main); }
+.stat-note { font-size: 12px; margin-top: 8px; }
+.stat-note.up { color: var(--success); }
+.stat-note.down { color: var(--danger); }
+.stat-note.neutral { color: var(--text-muted); }
+
+/* --- Кольорові мітки (Badges) --- */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-ok { background: rgba(76, 175, 80, 0.15); color: #81c784; }
+.badge-warn { background: rgba(255, 152, 0, 0.15); color: #ffb74d; }
+.badge-danger { background: rgba(244, 67, 54, 0.15); color: #e57373; }
