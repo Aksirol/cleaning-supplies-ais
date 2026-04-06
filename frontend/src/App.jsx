@@ -3,10 +3,8 @@ import MainLayout from './layouts/MainLayout';
 import Goods from './pages/Goods';
 import Dashboard from './pages/Dashboard';
 import Stock from './pages/Stock';
-import Suppliers from './pages/Suppliers'; // <-- Додаємо імпорт
-
-// Залишилися тільки ці заглушки для документів
-const Purchases = () => <div style={{ padding: '20px' }}><h1>Закупівлі</h1><p>Реєстр накладних</p></div>;
+import Suppliers from './pages/Suppliers';
+import Purchases from './pages/Purchases'; // <-- Додаємо імпорт закупівель
 
 function App() {
   return (
@@ -14,15 +12,17 @@ function App() {
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
+          
+          {/* Підключили сторінку закупівель */}
           <Route path="purchases" element={<Purchases />} />
+          
+          {/* Ці сторінки ще чекають своєї черги */}
           <Route path="expenses" element={<div style={{ padding: '20px' }}><h1>Витрати</h1></div>} />
+          <Route path="analytics" element={<div style={{ padding: '20px' }}><h1>Аналітика</h1></div>} />
+          
           <Route path="stock" element={<Stock />} />
           <Route path="goods" element={<Goods />} />
-          
-          {/* Підключили справжню сторінку Постачальників */}
           <Route path="suppliers" element={<Suppliers />} />
-          
-          <Route path="analytics" element={<div style={{ padding: '20px' }}><h1>Аналітика</h1></div>} />
         </Route>
       </Routes>
     </BrowserRouter>
