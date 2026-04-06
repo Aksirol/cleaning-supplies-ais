@@ -4,7 +4,8 @@ import Goods from './pages/Goods';
 import Dashboard from './pages/Dashboard';
 import Stock from './pages/Stock';
 import Suppliers from './pages/Suppliers';
-import Purchases from './pages/Purchases'; // <-- Додаємо імпорт закупівель
+import Purchases from './pages/Purchases';
+import Expenses from './pages/Expenses'; // <-- Додано імпорт
 
 function App() {
   return (
@@ -12,17 +13,16 @@ function App() {
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
-          
-          {/* Підключили сторінку закупівель */}
           <Route path="purchases" element={<Purchases />} />
           
-          {/* Ці сторінки ще чекають своєї черги */}
-          <Route path="expenses" element={<div style={{ padding: '20px' }}><h1>Витрати</h1></div>} />
-          <Route path="analytics" element={<div style={{ padding: '20px' }}><h1>Аналітика</h1></div>} />
+          {/* Підключили сторінку Витрат */}
+          <Route path="expenses" element={<Expenses />} />
           
           <Route path="stock" element={<Stock />} />
           <Route path="goods" element={<Goods />} />
           <Route path="suppliers" element={<Suppliers />} />
+          
+          <Route path="analytics" element={<div style={{ padding: '20px' }}><h1>Аналітика</h1></div>} />
         </Route>
       </Routes>
     </BrowserRouter>
