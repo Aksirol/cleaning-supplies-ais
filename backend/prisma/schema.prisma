@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Supplier {
+  id             Int        @id @default(autoincrement())
+  name           String     @db.VarChar(255)
+  edrpou         String?    @db.VarChar(20)
+  contact_person String?    @db.VarChar(255)
+  phone          String?    @db.VarChar(50)
+  email          String?    @db.VarChar(255)
+  address        String?    @db.Text
+  purchases      Purchase[]
+
+  @@map("suppliers")
+}
+
+model Good {
+  id             Int             @id @default(autoincrement())
+  name           String          @db.VarChar(255)
+  category       String          @db.VarChar(100)
+  unit           String          @db.VarChar(20)
+  min_stock      Decimal         @db.Decimal(10, 2)
+  price          Decimal?        @db.Decimal(10, 2)
+  notes          String?         @db.Text
+  purchase_items PurchaseItem[]
+  expense_items  ExpenseItem[]
+  stock          Stock?
+
+  @@map("goods")
+}
+
+model Department {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  responsible String?   @db.VarChar(255)
+  phone       String?   @db.VarChar(50)
+  expenses    Expense[]
+
+  @@map("departments")
+}
+
+model Purchase {
+  id          Int            @id @default(autoincrement())
+  supplier_id Int
+  doc_date    DateTime       @db.Date
+  doc_number  String?        @db.VarChar(50)
+  total_sum   Decimal        @db.Decimal(10, 2)
+  status      String?        @db.VarChar(50)
+  notes       String?        @db.Text
+  
+  supplier    Supplier       @relation(fields: [supplier_id], references: [id])
+  items       PurchaseItem[]
+
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id          Int      @id @default(autoincrement())
+  purchase_id Int
+  good_id     Int
+  quantity    Decimal  @db.Decimal(10, 2)
+  price       Decimal  @db.Decimal(10, 2)
+  sum         Decimal  @db.Decimal(10, 2)
+  
+  purchase    Purchase @relation(fields: [purchase_id], references: [id])
+  good        Good     @relation(fields: [good_id], references: [id])
+
+  @@map("purchase_items")
+}
+
+model Expense {
+  id            Int           @id @default(autoincrement())
+  department_id Int
+  doc_date      DateTime      @db.Date
+  doc_number    String?       @db.VarChar(50)
+  responsible   String?       @db.VarChar(255)
+  total_sum     Decimal       @db.Decimal(10, 2)
+  notes         String?       @db.Text
+  
+  department    Department    @relation(fields: [department_id], references: [id])
+  items         ExpenseItem[]
+
+  @@map("expenses")
+}
+
+model ExpenseItem {
+  id         Int     @id @default(autoincrement())
+  expense_id Int
+  good_id    Int
+  quantity   Decimal @db.Decimal(10, 2)
+  price      Decimal @db.Decimal(10, 2)
+  sum        Decimal @db.Decimal(10, 2)
+  
+  expense    Expense @relation(fields: [expense_id], references: [id])
+  good       Good    @relation(fields: [good_id], references: [id])
+
+  @@map("expense_items")
+}
+
+model Stock {
+  id         Int      @id @default(autoincrement())
+  good_id    Int      @unique
+  quantity   Decimal  @db.Decimal(10, 2)
+  updated_at DateTime @default(now())
+  
+  good       Good     @relation(fields: [good_id], references: [id])
+
+  @@map("stock")
+}
