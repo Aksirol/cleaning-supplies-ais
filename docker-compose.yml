@@ -8,9 +8,38 @@ services:
       POSTGRES_PASSWORD: adminpassword
       POSTGRES_DB: cleaning_ais_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d cleaning_ais_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: cleaning_ais_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      # Вказуємо хост 'postgres', бо Docker автоматично резолвить імена сервісів
+      DATABASE_URL: "postgresql://admin:adminpassword@postgres:5432/cleaning_ais_db?schema=public"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: cleaning_ais_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: "http://localhost:5000/api"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

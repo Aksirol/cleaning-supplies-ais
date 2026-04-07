@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
+import { API_URL } from '../config';
 
 const Stock = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const Stock = () => {
   const [selectedCategory, setSelectedCategory] = useState('Всі категорії');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/stock')
+    fetch(`${API_URL}/stock`)
       .then(res => res.json())
       .then(data => {
         setStockItems(data);

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/analytics/dashboard')
+    fetch(`${API_URL}/analytics/dashboard`)
       .then(res => res.json())
       .then(analyticsData => {
         setData(analyticsData);

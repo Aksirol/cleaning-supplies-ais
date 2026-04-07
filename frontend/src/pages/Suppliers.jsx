@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
 import AddSupplierModal from '../components/AddSupplierModal'; // Підключаємо модалку
+import { API_URL } from '../config';
 
 const Suppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -12,7 +13,7 @@ const Suppliers = () => {
   // Виносимо fetch в окрему функцію, щоб викликати після додавання/видалення
   const fetchSuppliers = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/suppliers')
+    fetch(`${API_URL}/suppliers`)
       .then(res => res.json())
       .then(data => {
         setSuppliers(data);
@@ -33,7 +34,7 @@ const Suppliers = () => {
     if (!window.confirm(`Ви впевнені, що хочете видалити контрагента "${name}"?`)) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/suppliers/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/suppliers/${id}`, { method: 'DELETE' });
       const data = await response.json();
       
       if (!response.ok) {

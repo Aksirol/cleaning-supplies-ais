@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
   // Дані для випадаючих списків
@@ -21,8 +22,8 @@ const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
   useEffect(() => {
     if (isOpen) {
       Promise.all([
-        fetch('http://localhost:5000/api/suppliers').then(res => res.json()),
-        fetch('http://localhost:5000/api/goods').then(res => res.json())
+        fetch(`${API_URL}/suppliers`).then(res => res.json()),
+        fetch(`${API_URL}/goods`).then(res => res.json())
       ]).then(([sups, gds]) => {
         setSuppliers(sups);
         setGoods(gds);
@@ -102,7 +103,7 @@ const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/api/purchases', {
+      const res = await fetch(`${API_URL}/purchases`, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify(payload)

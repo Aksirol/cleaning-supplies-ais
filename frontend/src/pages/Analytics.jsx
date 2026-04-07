@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
+import { API_URL } from '../config';
 
 const Analytics = () => {
   const [data, setData] = useState({
@@ -13,9 +14,9 @@ const Analytics = () => {
   useEffect(() => {
     // Робимо всі 3 запити паралельно для швидкодії
     Promise.all([
-      fetch('http://localhost:5000/api/analytics/dashboard').then(r => r.json()),
-      fetch('http://localhost:5000/api/expenses').then(r => r.json()),
-      fetch('http://localhost:5000/api/suppliers').then(r => r.json())
+      fetch(`${API_URL}/analytics/dashboard`).then(r => r.json()),
+      fetch(`${API_URL}/expenses`).then(r => r.json()),
+      fetch(`${API_URL}/suppliers`).then(r => r.json())
     ])
     .then(([dashboard, expenses, suppliers]) => {
       

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
   const [departments, setDepartments] = useState([]);
@@ -19,8 +20,8 @@ const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
   useEffect(() => {
     if (isOpen) {
       Promise.all([
-        fetch('http://localhost:5000/api/departments').then(res => res.json()),
-        fetch('http://localhost:5000/api/goods').then(res => res.json())
+        fetch(`${API_URL}/departments`).then(res => res.json()),
+        fetch(`${API_URL}/goods`).then(res => res.json())
       ]).then(([deps, gds]) => {
         setDepartments(deps);
         setGoods(gds);
@@ -103,7 +104,7 @@ const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/api/expenses', {
+      const res = await fetch(`${API_URL}/expenses`, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify(payload)

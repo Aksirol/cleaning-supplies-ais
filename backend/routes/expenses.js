@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db');
 
 // GET: Отримати всі акти витрат (з підрозділами та позиціями)
 router.get('/', async (req, res) => {
@@ -50,13 +49,23 @@ router.post('/', async (req, res) => {
         include: { items: true }
       });
 
-      // 2. Автоматично списуємо товари зі складу (МІНУС)
+      // 2. Автоматично списуємо товари зі складу (МІНУС) з перевіркою
       for (const item of items) {
-         // Тут ми використовуємо update, оскільки при списанні товар вже точно має бути на складі
-         await tx.stock.update({
-            where: { good_id: item.good_id },
-            data: { quantity: { decrement: parseFloat(item.quantity) } }
-         });
+        // Спочатку перевіряємо поточний залишок
+        const currentStock = await tx.stock.findUnique({
+          where: { good_id: item.good_id }
+        });
+
+        if (!currentStock || Number(currentStock.quantity) < Number(item.quantity)) {
+          // Якщо товару немає або його менше, ніж хочемо списати — скасовуємо всю транзакцію
+          throw new Error(`Недостатньо товару на складі для списання позиції ID: ${item.good_id}`);
+        }
+
+        // Якщо все ок — мінусуємо
+        await tx.stock.update({
+          where: { good_id: item.good_id },
+          data: { quantity: { decrement: parseFloat(item.quantity) } }
+        });
       }
 
       return newExpense;

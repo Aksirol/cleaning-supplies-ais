@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '../config';
 
 const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
   const [formData, setFormData] = useState({ name: '', edrpou: '', contact_person: '', phone: '' });
@@ -10,7 +11,7 @@ const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/suppliers', {
+      const response = await fetch(`${API_URL}/suppliers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

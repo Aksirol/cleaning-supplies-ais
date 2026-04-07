@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
 import AddGoodModal from '../components/AddGoodModal';
+import { API_URL } from '../config';
 
 const Goods = () => {
   const [goods, setGoods] = useState([]);
@@ -10,7 +11,7 @@ const Goods = () => {
   // 1. Виносимо fetch в окрему функцію для повторного виклику
   const fetchGoods = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/goods')
+    fetch(`${API_URL}/goods`)
       .then((res) => res.json())
       .then((data) => {
         setGoods(data);
@@ -27,7 +28,7 @@ const Goods = () => {
     if (!window.confirm(`Ви впевнені, що хочете видалити "${name}"?`)) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/goods/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/goods/${id}`, { method: 'DELETE' });
       const data = await response.json();
       
       if (!response.ok) {

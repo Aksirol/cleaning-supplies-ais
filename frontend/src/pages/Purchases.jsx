@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AddPurchaseModal from '../components/AddPurchaseModal';
 import Topbar from '../components/Topbar';
+import { API_URL } from '../config';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -11,7 +12,7 @@ const Purchases = () => {
   // Виносимо fetch в окрему функцію, щоб зручно оновлювати таблицю
   const fetchPurchases = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/purchases')
+    fetch(`${API_URL}/purchases`)
       .then(res => res.json())
       .then(data => {
         setPurchases(data);
@@ -34,7 +35,7 @@ const Purchases = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/purchases')
+    fetch(`${API_URL}/purchases`)
       .then(res => res.json())
       .then(data => {
         setPurchases(data);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
 import AddExpenseModal from '../components/AddExpenseModal';
+import { API_URL } from '../config';
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -14,7 +15,7 @@ const Expenses = () => {
 
   const fetchExpenses = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/expenses')
+    fetch(`${API_URL}/expenses`)
       .then(res => res.json())
       .then(data => {
         setExpenses(data);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '../config';
 
 const AddGoodModal = ({ isOpen, onClose, onGoodAdded }) => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const AddGoodModal = ({ isOpen, onClose, onGoodAdded }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/goods', {
+      const response = await fetch(`${API_URL}/goods`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
