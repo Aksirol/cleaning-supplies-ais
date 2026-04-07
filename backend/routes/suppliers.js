@@ -28,4 +28,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+// DELETE: Видалити постачальника
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.supplier.delete({
+      where: { id: Number(req.params.id) }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    // Якщо помилка P2003 - це спрацював захист Foreign Key
+    if (error.code === 'P2003') {
+      return res.status(400).json({ error: 'Неможливо видалити постачальника: від нього існують проведені закупівлі.' });
+    }
+    res.status(500).json({ error: 'Помилка видалення постачальника' });
+  }
+});
+
 module.exports = router;
