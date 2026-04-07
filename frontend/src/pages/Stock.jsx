@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
 
 const Stock = () => {
+  const navigate = useNavigate();
   const [stockItems, setStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +57,7 @@ const Stock = () => {
         title="Склад" 
         subtitle="Залишки товарів" 
         buttonText="+ Прихід" 
-        onButtonClick={() => alert('Ця кнопка може перенаправляти на сторінку "Закупівлі"')} 
+        onButtonClick={() => navigate('/purchases')} 
       />
 
       <div className="content-area">

@@ -35,4 +35,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+// DELETE: Видалити товар
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.good.delete({
+      where: { id: Number(req.params.id) }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    // Якщо помилка P2003 - це спрацював захист Foreign Key
+    if (error.code === 'P2003') {
+      return res.status(400).json({ error: 'Неможливо видалити товар: він вже фігурує у закупівлях або актах витрат.' });
+    }
+    res.status(500).json({ error: 'Помилка видалення' });
+  }
+});
+
 module.exports = router;

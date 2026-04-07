@@ -285,3 +285,68 @@ button {
 .bar-blue { background: rgba(0, 122, 204, 0.3); color: #9cd5ff; }
 .bar-green { background: rgba(76, 175, 80, 0.3); color: #a5d6a7; }
 .bar-amber { background: rgba(255, 152, 0, 0.3); color: #ffcc80; }
+
+/* --- СТИЛІ ДЛЯ PDF ЕКСПОРТУ (ДРУКУ) --- */
+@media print {
+  /* 1. Налаштування сторінки А4 */
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  /* 2. Ховаємо елементи інтерфейсу, які не потрібні у звіті */
+  .sidebar, 
+  .topbar-actions, 
+  .filter-bar,
+  .modal-overlay {
+    display: none !important;
+  }
+
+  /* 3. Прибираємо темну тему для друку (щоб не витрачати тонер і гарно читалось) */
+  body, .app, .main, .content-area {
+    background-color: white !important;
+    color: black !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 4. Стилізуємо картки для паперу (без рамок і тіней) */
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid; /* Забороняємо розривати картку на дві сторінки */
+  }
+
+  .card-header {
+    border-bottom: 2px solid #000 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .card-title {
+    color: black !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+  }
+
+  /* 5. Налаштування таблиць та тексту */
+  .table th, .table td {
+    color: black !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+  
+  .text-muted { color: #555 !important; }
+  .badge { border: 1px solid #ccc; background: transparent !important; color: black !important; }
+  .bar-track { border: 1px solid #000 !important; background: transparent !important; }
+  .bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; } /* Примусово друкувати кольори стовпчиків */
+
+  /* 6. Розтягуємо робочу область на всю ширину паперу */
+  .main {
+    flex: none !important;
+    width: 100% !important;
+  }
+  .content-area {
+    padding: 0 !important;
+  }
+}
