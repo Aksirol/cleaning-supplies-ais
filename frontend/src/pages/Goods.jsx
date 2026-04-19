@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 import Topbar from '../components/Topbar';
 import AddGoodModal from '../components/AddGoodModal';
-import { API_URL } from '../config';
 
 const Goods = () => {
   const [goods, setGoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedGood, setSelectedGood] = useState(null);
 
-  // 1. Виносимо fetch в окрему функцію для повторного виклику
   const fetchGoods = () => {
     setLoading(true);
     fetch(`${API_URL}/goods`)
       .then((res) => res.json())
       .then((data) => {
         setGoods(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Помилка завантаження товарів:', err);
         setLoading(false);
       });
   };
@@ -23,7 +27,7 @@ const Goods = () => {
     fetchGoods();
   }, []);
 
-  // 2. Логіка видалення з підтвердженням
+  // Логіка видалення
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Ви впевнені, що хочете видалити "${name}"?`)) return;
     
@@ -32,49 +36,98 @@ const Goods = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        alert(data.error); // Покажемо користувачу, якщо товар використовується
+        alert(data.error || 'Помилка видалення');
       } else {
-        fetchGoods(); // Успішно видалено - оновлюємо таблицю
+        fetchGoods();
       }
     } catch (error) {
       alert('Сталася помилка при видаленні');
     }
   };
 
+  // Логіка редагування
+  const handleEdit = (good) => {
+    setSelectedGood(good);
+    setIsModalOpen(true);
+  };
+
+  // Логіка додавання нового
+  const handleAddNew = () => {
+    setSelectedGood(null);
+    setIsModalOpen(true);
+  };
+
   return (
     <>
-      <Topbar title="Товари" subtitle="Довідник миючих засобів" buttonText="+ Товар" onButtonClick={() => setIsModalOpen(true)} />
+      <Topbar 
+        title="Товари" 
+        subtitle="Довідник миючих засобів" 
+        buttonText="+ Товар" 
+        onButtonClick={handleAddNew} 
+      />
+      
       <div className="content-area">
         <div className="card">
           <table className="table">
             <thead>
-              <tr><th>Код</th><th>Назва</th><th>Категорія</th><th>Од. виміру</th><th>Ціна (грн)</th><th>Дія</th></tr>
+              <tr>
+                <th>Код</th>
+                <th>Назва</th>
+                <th>Категорія</th>
+                <th>Од. виміру</th>
+                <th>Ціна (грн)</th>
+                <th>Дія</th>
+              </tr>
             </thead>
             <tbody>
-              {/* ... маппінг товарів ... */}
-              {goods.map((item) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Завантаження...</td>
+                </tr>
+              ) : goods.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Товарів не знайдено</td>
+                </tr>
+              ) : (
+                goods.map((item) => (
                   <tr key={item.id}>
                     <td className="text-id">{String(item.id).padStart(3, '0')}</td>
-                    <td>{item.name}</td>
+                    <td style={{ fontWeight: '500' }}>{item.name}</td>
                     <td>{item.category}</td>
                     <td>{item.unit}</td>
                     <td>{item.price ? Number(item.price).toFixed(2) : '—'}</td>
                     <td>
-                      {/* Змінили Дії */}
-                      <span className="text-action" style={{ color: 'var(--danger)', marginLeft: '12px' }} onClick={() => handleDelete(item.id, item.name)}>
+                      <span 
+                        className="text-action" 
+                        onClick={() => handleEdit(item)}
+                      >
+                        Редагувати
+                      </span>
+                      <span 
+                        className="text-action" 
+                        style={{ color: 'var(--danger)', marginLeft: '12px' }} 
+                        onClick={() => handleDelete(item.id, item.name)}
+                      >
                         Видалити
                       </span>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
       
-      {/* 3. Передаємо fetchGoods як колбек, щоб таблиця оновлювалась після додавання */}
-      <AddGoodModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onGoodAdded={fetchGoods} />
+      {/* Модальне вікно для створення та редагування */}
+      <AddGoodModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onGoodSaved={fetchGoods}
+        initialData={selectedGood} 
+      />
     </>
   );
 };
+
 export default Goods;

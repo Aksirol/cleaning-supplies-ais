@@ -2,19 +2,47 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../db');
 
-// GET: Отримати всіх постачальників
+const validate = require('../middleware/validate');
+const { expenseSchema } = require('../validators/schemas');
+
 router.get('/', async (req, res) => {
   try {
-    const suppliers = await prisma.supplier.findMany();
+    const { search } = req.query;
+    let whereClause = {};
+
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { edrpou: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    const suppliers = await prisma.supplier.findMany({
+      where: whereClause,
+      orderBy: { name: 'asc' }
+    });
     res.json(suppliers);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Помилка при отриманні постачальників' });
+    res.status(500).json({ error: 'Помилка завантаження постачальників' });
+  }
+});
+
+// PUT: Оновити дані існуючого постачальника
+router.put('/:id', validate(supplierSchema), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await prisma.supplier.update({
+      where: { id: Number(id) },
+      data: req.body
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Не вдалося оновити дані постачальника' });
   }
 });
 
 // POST: Створити нового постачальника
-router.post('/', async (req, res) => {
+router.post('/', validate(expenseSchema), async (req, res) => {
   const { name, edrpou, contact_person, phone, email, address } = req.body;
   try {
     const newSupplier = await prisma.supplier.create({

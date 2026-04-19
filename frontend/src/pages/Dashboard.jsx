@@ -27,8 +27,16 @@ const Dashboard = () => {
       />
 
       <div className="content-area">
-        {loading || !data ? (
-          <div>Завантаження статистики...</div>
+        {loading ? (
+          <div style={{ padding: '20px' }}>Завантаження статистики...</div>
+        ) : data?.error ? (
+          <div style={{ padding: '20px', color: 'var(--danger)', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--danger)' }}>
+            <strong>Помилка від бекенду:</strong> {data.error}
+            <br /><br />
+            💡 <em>Підказка:</em> Найімовірніше, база даних порожня. Виконай команди міграції та seed у терміналі.
+          </div>
+        ) : !data || !data.summary ? (
+          <div style={{ padding: '20px' }}>Немає даних</div>
         ) : (
           <>
             {/* Сітка з 4-ма картками */}

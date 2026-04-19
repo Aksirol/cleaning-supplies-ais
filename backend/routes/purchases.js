@@ -2,27 +2,60 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../db');
 
-// GET: Отримати всі закупівлі (з деталями постачальника та позиціями)
+const validate = require('../middleware/validate');
+const { purchaseSchema } = require('../validators/schemas');
+
+// GET: Отримати всі закупівлі (з підтримкою серверної фільтрації)
 router.get('/', async (req, res) => {
   try {
-    const purchases = await prisma.purchase.findMany({
-      include: {
-        supplier: true, // Підтягуємо дані постачальника
-        items: {
-          include: { good: true } // Підтягуємо дані про товар у кожному рядку
-        }
-      },
-      orderBy: { doc_date: 'desc' } // Сортуємо від новіших до старіших
+    // Додаємо page та limit (за замовчуванням 1 сторінка, 50 записів)
+    const { search, supplier, month, page = 1, limit = 50 } = req.query;
+    let whereClause = {};
+
+    if (search) whereClause.doc_number = { contains: search, mode: 'insensitive' };
+    if (supplier && supplier !== 'Всі постачальники') whereClause.supplier = { name: supplier };
+    if (month) {
+      const startDate = new Date(`${month}-01T00:00:00.000Z`);
+      const nextMonth = new Date(startDate);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      whereClause.doc_date = { gte: startDate, lt: nextMonth };
+    }
+
+    const pageNumber = Number(page);
+    const pageSize = Number(limit);
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Виконуємо два запити паралельно для швидкодії
+    const [totalCount, purchases] = await prisma.$transaction([
+      prisma.purchase.count({ where: whereClause }), // Рахуємо загальну кількість
+      prisma.purchase.findMany({                     // Беремо конкретну сторінку
+        where: whereClause,
+        include: { supplier: true, items: true },
+        orderBy: { doc_date: 'desc' },
+        skip: skip,
+        take: pageSize
+      })
+    ]);
+
+    // Повертаємо дані + інформацію для пагінації
+    res.json({
+      data: purchases,
+      meta: {
+        total: totalCount,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(totalCount / pageSize)
+      }
     });
-    res.json(purchases);
+
   } catch (error) {
     console.error('Помилка завантаження закупівель:', error);
-    res.status(500).json({ error: 'Не вдалося завантажити дані закупівель' });
+    res.status(500).json({ error: 'Помилка завантаження закупівель' });
   }
 });
 
 // POST: Створити нову закупівлю та оновити склад (Транзакція)
-router.post('/', async (req, res) => {
+router.post('/', validate(purchaseSchema), async (req, res) => {
   const { supplier_id, doc_date, doc_number, total_sum, status, notes, items } = req.body;
 
   try {

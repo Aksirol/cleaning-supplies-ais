@@ -1,80 +1,93 @@
+// backend/routes/expenses.js
 const express = require('express');
 const router = express.Router();
-const prisma = require('../db');
+const prisma = require('../db'); // Використовуємо Singleton Prisma
+const validate = require('../middleware/validate');
+const { expenseSchema } = require('../validators/schemas');
 
-// GET: Отримати всі акти витрат (з підрозділами та позиціями)
+// GET: Отримати всі витрати з серверною фільтрацією
 router.get('/', async (req, res) => {
   try {
+    const { month, department, search } = req.query;
+    let whereClause = {};
+
+    if (search) {
+      whereClause.doc_number = { contains: search, mode: 'insensitive' };
+    }
+
+    if (department && department !== 'Всі підрозділи') {
+      whereClause.department = { name: department };
+    }
+
+    if (month) {
+      const startDate = new Date(`${month}-01T00:00:00.000Z`);
+      const nextMonth = new Date(startDate);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      whereClause.doc_date = { gte: startDate, lt: nextMonth };
+    }
+
     const expenses = await prisma.expense.findMany({
+      where: whereClause,
       include: {
         department: true,
-        items: {
-          include: { good: true }
-        }
+        items: { include: { good: true } }
       },
-      orderBy: { doc_date: 'desc' }
+      orderBy: { doc_date: 'desc' },
+      take: 50 // Обмеження вибірки (пагінація)
     });
+
     res.json(expenses);
   } catch (error) {
-    console.error('Помилка завантаження витрат:', error);
-    res.status(500).json({ error: 'Не вдалося завантажити дані актів витрат' });
+    res.status(500).json({ error: 'Помилка завантаження актів списання' });
   }
 });
 
-// POST: Створити новий акт витрати та списати зі складу (Транзакція)
-router.post('/', async (req, res) => {
-  const { department_id, doc_date, doc_number, responsible, total_sum, notes, items } = req.body;
+// POST: Створити акт витрат з валідацією та перевіркою залишків
+router.post('/', validate(expenseSchema), async (req, res) => {
+  const { department_id, doc_date, doc_number, responsible, total_sum, items } = req.body;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      
-      // 1. Створюємо документ витрати та його рядки
-      const newExpense = await tx.expense.create({
+      // 1. Створюємо заголовок акту
+      const expense = await tx.expense.create({
         data: {
           department_id,
           doc_date: new Date(doc_date),
           doc_number,
           responsible,
-          total_sum: parseFloat(total_sum),
-          notes,
+          total_sum,
           items: {
             create: items.map(item => ({
               good_id: item.good_id,
-              quantity: parseFloat(item.quantity),
-              price: parseFloat(item.price), // Беремо облікову ціну
-              sum: parseFloat(item.sum)
+              quantity: item.quantity,
+              price: item.price,
+              sum: item.sum
             }))
           }
-        },
-        include: { items: true }
+        }
       });
 
-      // 2. Автоматично списуємо товари зі складу (МІНУС) з перевіркою
+      // 2. Списання зі складу з ПЕРЕВІРКОЮ НАЛИЧНОСТІ (Виправлення багу #4)
       for (const item of items) {
-        // Спочатку перевіряємо поточний залишок
-        const currentStock = await tx.stock.findUnique({
-          where: { good_id: item.good_id }
-        });
-
-        if (!currentStock || Number(currentStock.quantity) < Number(item.quantity)) {
-          // Якщо товару немає або його менше, ніж хочемо списати — скасовуємо всю транзакцію
-          throw new Error(`Недостатньо товару на складі для списання позиції ID: ${item.good_id}`);
+        const stock = await tx.stock.findUnique({ where: { good_id: item.good_id } });
+        
+        if (!stock || Number(stock.quantity) < Number(item.quantity)) {
+          throw new Error(`Недостатньо товару на складі: ID ${item.good_id}`);
         }
 
-        // Якщо все ок — мінусуємо
         await tx.stock.update({
           where: { good_id: item.good_id },
           data: { quantity: { decrement: parseFloat(item.quantity) } }
         });
       }
 
-      return newExpense;
+      return expense;
     });
 
-    res.status(201).json(result);
+    res.json(result);
   } catch (error) {
-    console.error('Помилка при створенні витрати:', error);
-    res.status(500).json({ error: 'Помилка при збереженні акту витрати (можливо, товару недостатньо на складі)' });
+    console.error(error);
+    res.status(400).json({ error: error.message || 'Помилка проведення акту' });
   }
 });
 

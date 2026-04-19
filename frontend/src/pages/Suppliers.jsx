@@ -1,121 +1,110 @@
-import { useState, useEffect } from 'react';
-import Topbar from '../components/Topbar';
-import AddSupplierModal from '../components/AddSupplierModal'; // Підключаємо модалку
+// frontend/src/pages/Suppliers.jsx
+import { useState, useEffect, useMemo } from 'react';
 import { API_URL } from '../config';
+import Topbar from '../components/Topbar';
+import AddSupplierModal from '../components/AddSupplierModal';
 
 const Suppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Стан для керування модальним вікном
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
-  // Виносимо fetch в окрему функцію, щоб викликати після додавання/видалення
   const fetchSuppliers = () => {
     setLoading(true);
-    fetch(`${API_URL}/suppliers`)
+    const query = searchTerm ? `?search=${searchTerm}` : '';
+    fetch(`${API_URL}/suppliers${query}`)
       .then(res => res.json())
-      .then(data => {
-        setSuppliers(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Помилка завантаження постачальників:', err);
-        setLoading(false);
-      });
+      .then(data => { setSuppliers(data); setLoading(false); });
   };
 
   useEffect(() => {
-    fetchSuppliers();
-  }, []);
+    const handler = setTimeout(fetchSuppliers, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  // Логіка видалення
+  const sortedSuppliers = useMemo(() => {
+    let sortable = [...suppliers];
+    if (sortConfig.key) {
+      sortable.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortable;
+  }, [suppliers, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const handleEdit = (sup) => {
+    setSelectedSupplier(sup);
+    setIsModalOpen(true);
+  };
+
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Ви впевнені, що хочете видалити контрагента "${name}"?`)) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/suppliers/${id}`, { method: 'DELETE' });
-      const data = await response.json();
-      
-      if (!response.ok) {
-        alert(data.error || 'Сталася помилка'); 
-      } else {
-        fetchSuppliers(); // Успішно видалено - оновлюємо таблицю
-      }
-    } catch (error) {
-      alert('Сталася помилка при видаленні');
+    if (!window.confirm(`Видалити контрагента "${name}"?`)) return;
+    const res = await fetch(`${API_URL}/suppliers/${id}`, { method: 'DELETE' });
+    if (res.ok) fetchSuppliers();
+    else {
+      const err = await res.json();
+      alert(err.error);
     }
   };
 
   return (
     <>
-      <Topbar 
-        title="Постачальники" 
-        subtitle="Контрагенти" 
-        buttonText="+ Постачальник" 
-        onButtonClick={() => setIsModalOpen(true)} // Тепер кнопка відкриває вікно
-      />
-
+      <Topbar title="Постачальники" subtitle="Контрагенти" buttonText="+ Постачальник" 
+        onButtonClick={() => { setSelectedSupplier(null); setIsModalOpen(true); }} />
+      
       <div className="content-area">
+        <div className="filter-bar">
+          <input type="text" placeholder="Пошук за назвою або ЄДРПОУ..." 
+            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{width: '300px'}} />
+        </div>
+
         <div className="card">
-          <div className="card-header">
-            <span className="card-title">Постачальники</span>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              {loading ? 'Завантаження...' : `${suppliers.length} контрагенти`}
-            </span>
-          </div>
-          
           <table className="table">
             <thead>
               <tr>
-                <th>Код</th>
-                <th>Назва</th>
+                <th onClick={() => requestSort('id')} style={{cursor:'pointer'}}>Код {sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</th>
+                <th onClick={() => requestSort('name')} style={{cursor:'pointer'}}>Назва {sortConfig.key === 'name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</th>
                 <th>ЄДРПОУ</th>
                 <th>Контакт</th>
                 <th>Телефон</th>
-                <th>Дія</th> {/* Нова колонка */}
+                <th>Дія</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Завантаження даних...</td>
-                </tr>
-              ) : suppliers.length === 0 ? (
-                <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Постачальників не знайдено</td>
-                </tr>
-              ) : (
-                suppliers.map((item) => (
-                  <tr key={item.id}>
-                    <td className="text-id">П-{String(item.id).padStart(3, '0')}</td>
-                    <td style={{ fontWeight: '500' }}>{item.name}</td>
-                    <td>{item.edrpou || '—'}</td>
-                    <td>{item.contact_person || '—'}</td>
-                    <td>{item.phone || '—'}</td>
+              {loading ? <tr><td colSpan="6" style={{textAlign:'center'}}>Завантаження...</td></tr> : 
+                sortedSuppliers.map(sup => (
+                  <tr key={sup.id}>
+                    <td className="text-id">П-{String(sup.id).padStart(3, '0')}</td>
+                    <td style={{fontWeight:'500'}}>{sup.name}</td>
+                    <td>{sup.edrpou || '—'}</td>
+                    <td>{sup.contact_person || '—'}</td>
+                    <td>{sup.phone || '—'}</td>
                     <td>
-                      <span 
-                        className="text-action" 
-                        style={{ color: 'var(--danger)', cursor: 'pointer' }} 
-                        onClick={() => handleDelete(item.id, item.name)}
-                      >
-                        Видалити
-                      </span>
+                      <span className="text-action" onClick={() => handleEdit(sup)}>Редагувати</span>
+                      <span className="text-action" style={{color:'var(--danger)', marginLeft:'12px'}} 
+                        onClick={() => handleDelete(sup.id, sup.name)}>Видалити</span>
                     </td>
                   </tr>
                 ))
-              )}
+              }
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Рендеримо модальне вікно */}
-      <AddSupplierModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSupplierAdded={fetchSuppliers} 
-      />
+      <AddSupplierModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} 
+        onSupplierSaved={fetchSuppliers} initialData={selectedSupplier} />
     </>
   );
 };

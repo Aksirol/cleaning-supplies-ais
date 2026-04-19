@@ -1,62 +1,61 @@
-import { useState } from 'react';
+// frontend/src/components/AddGoodModal.jsx
+import { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 
-const AddGoodModal = ({ isOpen, onClose, onGoodAdded }) => {
+const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Порошки', // Значення за замовчуванням
+    category: 'Порошки',
     unit: 'шт.',
-    min_stock: '',
-    price: ''
+    min_stock: 0,
+    price: 0
   });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Якщо вікно закрите, не рендеримо нічого
-  if (!isOpen) return null;
+  // Коли відкриваємо модалку для редагування, заповнюємо поля
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name,
+        category: initialData.category,
+        unit: initialData.unit,
+        min_stock: Number(initialData.min_stock),
+        price: Number(initialData.price || 0)
+      });
+    } else {
+      // Скидання форми для створення нового
+      setFormData({ name: '', category: 'Порошки', unit: 'шт.', min_stock: 0, price: 0 });
+    }
+  }, [initialData, isOpen]);
 
-  // Обробник зміни полів форми
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Відправка даних на сервер
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    const method = initialData ? 'PUT' : 'POST';
+    const url = initialData ? `${API_URL}/goods/${initialData.id}` : `${API_URL}/goods`;
 
     try {
-      const response = await fetch(`${API_URL}/goods`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-
-      if (!response.ok) throw new Error('Помилка при збереженні');
-
-      const newGood = await response.json();
-      onGoodAdded(newGood); // Передаємо новий товар у батьківський компонент
-      
-      // Очищаємо форму після успішного збереження
-      setFormData({ name: '', category: 'Порошки', unit: 'шт.', min_stock: '', price: '' });
-      onClose(); // Закриваємо модалку
+      if (response.ok) {
+        onGoodSaved();
+        onClose();
+      }
     } catch (error) {
-      console.error(error);
-      alert('Не вдалося додати товар');
-    } finally {
-      setIsSubmitting(false);
+      alert('Помилка збереження');
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <div className="modal-title">Додати новий товар</div>
+          <div className="modal-title">{initialData ? 'Редагувати товар' : 'Додати товар'}</div>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
-        
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div className="form-group">
@@ -101,9 +100,7 @@ const AddGoodModal = ({ isOpen, onClose, onGoodAdded }) => {
 
           <div className="modal-footer">
             <button type="button" className="btn" onClick={onClose}>Скасувати</button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Збереження...' : 'Зберегти'}
-            </button>
+            <button type="submit" className="btn btn-primary">Зберегти</button>
           </div>
         </form>
       </div>

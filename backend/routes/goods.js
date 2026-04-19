@@ -2,6 +2,27 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../db');
 
+const validate = require('../middleware/validate');
+const { expenseSchema } = require('../validators/schemas');
+
+// PUT: Оновити дані товару
+const { goodSchema } = require('../validators/schemas');
+const validate = require('../middleware/validate');
+
+router.put('/:id', validate(goodSchema), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedGood = await prisma.good.update({
+      where: { id: Number(id) },
+      data: req.body,
+    });
+    res.json(updatedGood);
+  } catch (error) {
+    console.error('Помилка оновлення товару:', error);
+    res.status(500).json({ error: 'Не вдалося оновити дані товару' });
+  }
+});
+
 // GET: Отримати всі товари
 router.get('/', async (req, res) => {
   try {
@@ -14,7 +35,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST: Додати новий товар
-router.post('/', async (req, res) => {
+router.post('/', validate(expenseSchema), async (req, res) => {
   const { name, category, unit, min_stock, price, notes } = req.body;
   try {
     const newGood = await prisma.good.create({
