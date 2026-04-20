@@ -6,4 +6,4 @@ COPY . .
 # Генеруємо клієнт Prisma всередині контейнера
 RUN npx prisma generate
 EXPOSE 5000
-CMD ["npm", "run", "start"]
+CMD npx prisma db push && npm run start

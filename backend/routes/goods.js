@@ -3,12 +3,9 @@ const router = express.Router();
 const prisma = require('../db');
 
 const validate = require('../middleware/validate');
-const { expenseSchema } = require('../validators/schemas');
+const { goodSchema } = require('../validators/schemas'); // Підключаємо правильну схему
 
 // PUT: Оновити дані товару
-const { goodSchema } = require('../validators/schemas');
-const validate = require('../middleware/validate');
-
 router.put('/:id', validate(goodSchema), async (req, res) => {
   try {
     const { id } = req.params;
@@ -35,7 +32,8 @@ router.get('/', async (req, res) => {
 });
 
 // POST: Додати новий товар
-router.post('/', validate(expenseSchema), async (req, res) => {
+// Виправлено: тепер використовується goodSchema замість expenseSchema
+router.post('/', validate(goodSchema), async (req, res) => {
   const { name, category, unit, min_stock, price, notes } = req.body;
   try {
     const newGood = await prisma.good.create({

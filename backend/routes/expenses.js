@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../db'); // Використовуємо Singleton Prisma
 const validate = require('../middleware/validate');
-const { expenseSchema } = require('../validators/schemas');
+const { expenseSchema } = require('../validators/schema');
 
 // GET: Отримати всі витрати з серверною фільтрацією
 router.get('/', async (req, res) => {

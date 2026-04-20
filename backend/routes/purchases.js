@@ -3,7 +3,7 @@ const router = express.Router();
 const prisma = require('../db');
 
 const validate = require('../middleware/validate');
-const { purchaseSchema } = require('../validators/schemas');
+const { purchaseSchema } = require('../validators/schema');
 
 // GET: Отримати всі закупівлі (з підтримкою серверної фільтрації)
 router.get('/', async (req, res) => {
