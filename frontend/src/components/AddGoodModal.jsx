@@ -29,6 +29,12 @@ const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (Number(formData.price) <= 0) {
+      alert('Вкажіть ціну товару більше нуля');
+      return;
+    }
+
     const method = initialData ? 'PUT' : 'POST';
     const url = initialData ? `${API_URL}/goods/${initialData.id}` : `${API_URL}/goods`;
 
@@ -93,7 +99,7 @@ const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
               </div>
               <div className="form-group">
                 <label className="form-label">Облікова ціна (грн)</label>
-                <input type="number" name="price" min="0" step="0.01" className="form-control" value={formData.price} onChange={handleChange} />
+                <input type="number" name="price" min="0.01" step="0.01" className="form-control" value={formData.price} onChange={handleChange} />
               </div>
             </div>
           </div>

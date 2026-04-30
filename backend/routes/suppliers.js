@@ -3,7 +3,6 @@ const router = express.Router();
 const prisma = require('../db');
 
 const validate = require('../middleware/validate');
-const { expenseSchema } = require('../validators/schema');
 const { supplierSchema } = require('../validators/schema');
 
 router.get('/', async (req, res) => {

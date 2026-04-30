@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const stockRoutes = require('./routes/stock');
 const analyticsRoutes = require('./routes/analytics');
