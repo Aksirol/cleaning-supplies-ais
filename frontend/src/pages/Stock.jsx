@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
 import { API_URL } from '../config';
@@ -11,6 +11,9 @@ const Stock = () => {
   // Стани для фільтрів
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Всі категорії');
+
+  // Стан для сортування (за замовчуванням за залишкам від найбільшого до найменшого)
+  const [sortConfig, setSortConfig] = useState({ key: 'quantity', direction: 'desc' });
 
   useEffect(() => {
     fetch(`${API_URL}/stock`)
@@ -25,15 +28,62 @@ const Stock = () => {
       });
   }, []);
 
-  // Динамічно отримуємо унікальні категорії з товарів для випадаючого списку
-  const categories = ['Всі категорії', ...new Set(stockItems.map(item => item.good.category))];
+  // Динамічно отримуємо унікальні категорії з товарів
+  const categories = ['Всі категорії', ...new Set(stockItems.map(item => item.good?.category).filter(Boolean))];
 
-  // Застосовуємо фільтри до даних
+  // 1. Спочатку фільтруємо дані
   const filteredStock = stockItems.filter(item => {
+    // Додано безпечну перевірку наявності item.good
+    if (!item.good) return false; 
+    
     const matchesSearch = item.good.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'Всі категорії' || item.good.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // 2. Потім сортуємо ВЖЕ відфільтровані дані
+  const sortedAndFilteredStock = useMemo(() => {
+    let sortable = [...filteredStock];
+    
+    if (sortConfig.key) {
+      sortable.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        
+        // Обробка вкладених властивостей (назва, категорія, мін. запас лежать в об'єкті good)
+        if (sortConfig.key === 'good_name') {
+          aVal = a.good?.name || '';
+          bVal = b.good?.name || '';
+        }
+        if (sortConfig.key === 'category') {
+          aVal = a.good?.category || '';
+          bVal = b.good?.category || '';
+        }
+        if (sortConfig.key === 'min_stock') {
+          aVal = Number(a.good?.min_stock || 0);
+          bVal = Number(b.good?.min_stock || 0);
+        }
+        
+        // Числове сортування для кількості
+        if (sortConfig.key === 'quantity') {
+          aVal = Number(aVal || 0);
+          bVal = Number(bVal || 0);
+        }
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortable;
+  }, [filteredStock, sortConfig]);
+
+  // Функція зміни напрямку сортування
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
 
   // Функція для визначення кольорової мітки статусу
   const getStatusBadge = (quantity, minStock) => {
@@ -49,7 +99,6 @@ const Stock = () => {
     return <span className="badge badge-ok">Норма</span>;
   };
 
-  // Поточна дата для заголовка таблиці
   const currentDate = new Date().toLocaleDateString('uk-UA');
 
   return (
@@ -94,11 +143,19 @@ const Stock = () => {
           <table className="table">
             <thead>
               <tr>
-                <th>Товар</th>
-                <th>Категорія</th>
+                <th onClick={() => requestSort('good_name')} style={{cursor:'pointer'}}>
+                  Товар {sortConfig.key === 'good_name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                </th>
+                <th onClick={() => requestSort('category')} style={{cursor:'pointer'}}>
+                  Категорія {sortConfig.key === 'category' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                </th>
                 <th>Од. виміру</th>
-                <th>Залишок</th>
-                <th>Мін. запас</th>
+                <th onClick={() => requestSort('quantity')} style={{cursor:'pointer'}}>
+                  Залишок {sortConfig.key === 'quantity' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                </th>
+                <th onClick={() => requestSort('min_stock')} style={{cursor:'pointer'}}>
+                  Мін. запас {sortConfig.key === 'min_stock' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                </th>
                 <th>Статус</th>
               </tr>
             </thead>
@@ -107,19 +164,19 @@ const Stock = () => {
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Завантаження даних...</td>
                 </tr>
-              ) : filteredStock.length === 0 ? (
+              ) : sortedAndFilteredStock.length === 0 ? (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Товарів не знайдено</td>
                 </tr>
               ) : (
-                filteredStock.map((item) => (
+                sortedAndFilteredStock.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.good.name}</td>
-                    <td>{item.good.category}</td>
-                    <td>{item.good.unit}</td>
+                    <td style={{ fontWeight: '500' }}>{item.good?.name}</td>
+                    <td>{item.good?.category}</td>
+                    <td>{item.good?.unit}</td>
                     <td style={{ fontWeight: '500' }}>{Number(item.quantity)}</td>
-                    <td className="text-muted">{Number(item.good.min_stock)}</td>
-                    <td>{getStatusBadge(item.quantity, item.good.min_stock)}</td>
+                    <td className="text-muted">{Number(item.good?.min_stock)}</td>
+                    <td>{getStatusBadge(item.quantity, item.good?.min_stock)}</td>
                   </tr>
                 ))
               )}

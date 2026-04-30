@@ -51,7 +51,24 @@ const Expenses = () => {
       sortableItems.sort((a, b) => {
         let aVal = a[sortConfig.key];
         let bVal = b[sortConfig.key];
-        if (sortConfig.key === 'department') { aVal = a.department.name; bVal = b.department.name; }
+
+        if (sortConfig.key === 'department') {
+          aVal = a.department.name;
+          bVal = b.department.name;
+        }
+
+        // Числові поля — конвертуємо явно
+        if (sortConfig.key === 'total_sum') {
+          aVal = Number(aVal);
+          bVal = Number(bVal);
+        }
+
+        // Дати — конвертуємо в timestamp
+        if (sortConfig.key === 'doc_date') {
+          aVal = new Date(aVal).getTime();
+          bVal = new Date(bVal).getTime();
+        }
+
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;

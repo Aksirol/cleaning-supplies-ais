@@ -3,7 +3,7 @@ const router = express.Router();
 const prisma = require('../db');
 
 const validate = require('../middleware/validate');
-const { goodSchema } = require('../validators/schemas'); // Підключаємо правильну схему
+const { goodSchema } = require('../validators/schema'); // Підключаємо правильну схему
 
 // PUT: Оновити дані товару
 router.put('/:id', validate(goodSchema), async (req, res) => {

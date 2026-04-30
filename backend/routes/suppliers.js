@@ -43,7 +43,7 @@ router.put('/:id', validate(supplierSchema), async (req, res) => {
 });
 
 // POST: Створити нового постачальника
-router.post('/', validate(expenseSchema), async (req, res) => {
+router.post('/', validate(supplierSchema), async (req, res) => {
   const { name, edrpou, contact_person, phone, email, address } = req.body;
   try {
     const newSupplier = await prisma.supplier.create({

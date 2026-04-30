@@ -29,8 +29,17 @@ const Suppliers = () => {
     let sortable = [...suppliers];
     if (sortConfig.key) {
       sortable.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        // id — число
+        if (sortConfig.key === 'id') {
+          aVal = Number(aVal);
+          bVal = Number(bVal);
+        }
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
