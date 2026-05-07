@@ -2,139 +2,180 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🧹 Очищення старих даних...');
-  await prisma.stock.deleteMany();
+  console.log('🧹 Очищення старої бази даних...');
   await prisma.expenseItem.deleteMany();
-  await prisma.expense.deleteMany();
   await prisma.purchaseItem.deleteMany();
+  await prisma.expense.deleteMany();
   await prisma.purchase.deleteMany();
+  await prisma.stock.deleteMany();
   await prisma.good.deleteMany();
-  await prisma.department.deleteMany();
   await prisma.supplier.deleteMany();
+  await prisma.department.deleteMany();
 
-  console.log('🌱 Додавання нових даних...');
+  console.log('📦 Створення довідників...');
 
-  // --- 1. ПОСТАЧАЛЬНИКИ ---
-  const supHimtorg = await prisma.supplier.create({
-    data: { name: 'ТОВ «Хімторг»', edrpou: '31245678', contact_person: 'Мельник О.П.', phone: '050 123-45-67' }
-  });
-  const supChystosvit = await prisma.supplier.create({
-    data: { name: 'ПП «Чистосвіт»', edrpou: '42356789', contact_person: 'Бойко В.І.', phone: '067 234-56-78' }
-  });
-  const supDistrib = await prisma.supplier.create({
-    data: { name: 'АТ «Дистриб»', edrpou: '53467890', contact_person: 'Ткаченко С.Р.', phone: '073 345-67-89' }
-  });
-  const supFop = await prisma.supplier.create({
-    data: { name: 'ФОП Гриценко', edrpou: null, contact_person: 'Гриценко А.М.', phone: '099 456-78-90' }
-  });
+  // 1. ПІДРОЗДІЛИ
+  const departmentsData = [
+    { name: 'Кухня (Гарячий цех)', responsible: 'Шевченко О.В.' },
+    { name: 'Кухня (Холодний цех)', responsible: 'Коваленко І.П.' },
+    { name: 'Пральня', responsible: 'Бойко М.М.' },
+    { name: 'Прибирання номерів (Поверх 1)', responsible: 'Ткаченко Л.С.' },
+    { name: 'Прибирання номерів (Поверх 2)', responsible: 'Григоренко В.І.' },
+    { name: 'Громадські санвузли', responsible: 'Мельник О.П.' }
+  ];
+  const departments = [];
+  for (const d of departmentsData) {
+    departments.push(await prisma.department.create({ data: d }));
+  }
 
-  // --- 2. ПІДРОЗДІЛИ ---
-  const depPralnya = await prisma.department.create({ data: { name: 'Пральня', responsible: 'Сидоренко М.І.' } });
-  const depKitchen1 = await prisma.department.create({ data: { name: 'Кухня №1', responsible: 'Іваненко Р.С.' } });
-  const depKitchen2 = await prisma.department.create({ data: { name: 'Кухня №2', responsible: 'Петренко О.В.' } });
-  const depSanitary1 = await prisma.department.create({ data: { name: 'Санвузол №1', responsible: 'Коваль Т.Г.' } });
-  const depSanitary2 = await prisma.department.create({ data: { name: 'Санвузол №2', responsible: 'Гнатюк В.В.' } });
-  const depAdmin = await prisma.department.create({ data: { name: 'Адмінкорпус', responsible: 'Лисенко А.А.' } });
+  // 2. ПОСТАЧАЛЬНИКИ
+  const suppliersData = [
+    { name: 'ТОВ "Хімторг-Плюс"', edrpou: '38123456', contact_person: 'Іванов П.', phone: '044-123-45-67' },
+    { name: 'ПП "Чистий Дім"', edrpou: '29876543', contact_person: 'Смирнова О.', phone: '067-999-88-77' },
+    { name: 'ТОВ "Еко-Клін Україна"', edrpou: '44556677', contact_person: 'Дмитренко В.', phone: '050-111-22-33' },
+    { name: 'ФОП Ковальчук А.В.', edrpou: '3122334455', contact_person: 'Ковальчук А.', phone: '063-444-55-66' },
+    { name: 'ТОВ "Горека Сервіс"', edrpou: '39887766', contact_person: 'Павленко С.', phone: '044-222-33-44' }
+  ];
+  const suppliers = [];
+  for (const s of suppliersData) {
+    suppliers.push(await prisma.supplier.create({ data: s }));
+  }
 
-  // --- 3. ТОВАРИ ---
-  const goodTide = await prisma.good.create({
-    data: { name: 'Пральний порошок Tide 3кг', category: 'Порошки', unit: 'уп.', min_stock: 10, price: 210.00 }
-  });
-  const goodFairy = await prisma.good.create({
-    data: { name: 'Fairy для посуду 1л', category: 'Рідкі засоби', unit: 'шт.', min_stock: 10, price: 45.00 }
-  });
-  const goodSavoy = await prisma.good.create({
-    data: { name: 'Рідке мило Savoy 5л', category: 'Мило', unit: 'каністра', min_stock: 5, price: 235.00 }
-  });
-  const goodDomestos = await prisma.good.create({
-    data: { name: 'Засіб для підлоги Domestos 1л', category: 'Дезінфектанти', unit: 'шт.', min_stock: 8, price: 89.00 }
-  });
-  const goodChlorine = await prisma.good.create({
-    data: { name: 'Хлоровмісний засіб 1л', category: 'Дезінфектанти', unit: 'л', min_stock: 10, price: 40.00 }
-  });
-  const goodDuck = await prisma.good.create({
-    data: { name: 'Гель для унітазів Duck', category: 'Дезінфектанти', unit: 'шт.', min_stock: 6, price: 65.00 }
-  });
+  // 3. ТОВАРИ
+  const goodsData = [
+    { name: 'Пральний порошок Tide Professional 15кг', category: 'Порошки', unit: 'уп.', min_stock: 5, price: 1250.00 },
+    { name: 'Гель для прання Ariel 5л', category: 'Рідкі засоби', unit: 'каністра', min_stock: 10, price: 850.50 },
+    { name: 'Миючий засіб Fairy 5л', category: 'Рідкі засоби', unit: 'каністра', min_stock: 15, price: 540.00 },
+    { name: 'Засіб для підлоги Mr.Proper 5л', category: 'Рідкі засоби', unit: 'каністра', min_stock: 10, price: 480.00 },
+    { name: 'Засіб для скла Clin 500мл', category: 'Рідкі засоби', unit: 'шт.', min_stock: 20, price: 85.00 },
+    { name: 'Рідке мило "Бриз" 5л', category: 'Мило', unit: 'каністра', min_stock: 15, price: 210.00 },
+    { name: 'Мило туалетне Dove 100г', category: 'Мило', unit: 'шт.', min_stock: 50, price: 45.00 },
+    { name: 'Domestos Універсальний 1л', category: 'Дезінфектанти', unit: 'шт.', min_stock: 30, price: 115.00 },
+    { name: 'Хлорні таблетки "Жавель-Клейд" 300шт', category: 'Дезінфектанти', unit: 'уп.', min_stock: 5, price: 320.00 },
+    { name: 'Антисептик спиртовий АХД 2000 1л', category: 'Дезінфектанти', unit: 'шт.', min_stock: 20, price: 195.00 },
+    { name: 'Швабра з віджимом PRO', category: 'Інвентар', unit: 'шт.', min_stock: 5, price: 650.00 },
+    { name: 'Ганчірки мікрофібра (уп. 10 шт)', category: 'Інвентар', unit: 'уп.', min_stock: 15, price: 180.00 },
+    { name: 'Рукавички гумові (розмір M)', category: 'Інвентар', unit: 'пара', min_stock: 100, price: 35.00 },
+    { name: 'Пакети для сміття 120л (уп. 50шт)', category: 'Інвентар', unit: 'уп.', min_stock: 30, price: 145.00 },
+    { name: 'Губки для посуду (уп. 10шт)', category: 'Інвентар', unit: 'уп.', min_stock: 40, price: 55.00 }
+  ];
+  const goods = [];
+  for (const g of goodsData) {
+    goods.push(await prisma.good.create({ data: g }));
+  }
 
-  // --- 4. ЗАКУПІВЛІ (з позиціями) ---
-  await prisma.purchase.create({
-    data: {
-      supplier_id: supHimtorg.id, doc_date: new Date('2026-04-05T10:00:00Z'), doc_number: 'ВН-2026-041', total_sum: 4200.00, status: 'Проведено',
-      items: { create: [
-        { good_id: goodTide.id, quantity: 20, price: 210.00, sum: 4200.00 }
-      ]}
+  console.log('🚚 Генерація закупівель та витрат (Січень - Травень 2026)...');
+
+  // Допоміжні функції для рандому
+  const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const randomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const randomDate = (start, end) => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+
+  const startDate = new Date('2026-01-10T08:00:00Z');
+  const endDate = new Date('2026-05-15T18:00:00Z');
+
+  // Облік поточних залишків на складі в пам'яті
+  let stockLedger = {};
+  goods.forEach(g => stockLedger[g.id] = 0);
+
+  // 4. ГЕНЕРАЦІЯ ЗАКУПІВЕЛЬ (40 накладних)
+  for (let i = 1; i <= 40; i++) {
+    const docDate = randomDate(startDate, endDate);
+    const supplier = randomElement(suppliers);
+    const numItems = randomInt(2, 6);
+    
+    // Вибираємо випадкові унікальні товари для накладної
+    const shuffledGoods = [...goods].sort(() => 0.5 - Math.random());
+    const selectedGoods = shuffledGoods.slice(0, numItems);
+
+    let totalSum = 0;
+    const itemsData = selectedGoods.map(good => {
+      const quantity = randomInt(10, 50);
+      const price = good.price;
+      const sum = quantity * price;
+      totalSum += sum;
+      
+      // Поповнюємо віртуальний склад
+      stockLedger[good.id] += quantity;
+
+      return { good_id: good.id, quantity, price, sum };
+    });
+
+    await prisma.purchase.create({
+      data: {
+        doc_number: `ВН-${String(i).padStart(4, '0')}`,
+        doc_date: docDate,
+        supplier_id: supplier.id,
+        total_sum: totalSum,
+        status: 'Проведено',
+        items: { create: itemsData }
+      }
+    });
+  }
+
+  // 5. ГЕНЕРАЦІЯ ВИТРАТ (80 актів списання)
+  for (let i = 1; i <= 80; i++) {
+    const docDate = randomDate(startDate, endDate);
+    const department = randomElement(departments);
+    const numItems = randomInt(1, 4);
+    
+    const shuffledGoods = [...goods].sort(() => 0.5 - Math.random());
+    let selectedGoods = shuffledGoods.slice(0, numItems);
+
+    let totalSum = 0;
+    const itemsData = [];
+
+    for (const good of selectedGoods) {
+      // Перевіряємо, чи є товар на віртуальному складі
+      const availableQty = stockLedger[good.id];
+      if (availableQty > 2) {
+        // Списуємо невелику кількість
+        const quantity = randomInt(1, Math.min(5, availableQty));
+        const price = good.price;
+        const sum = quantity * price;
+        totalSum += sum;
+        
+        // Віднімаємо з віртуального складу
+        stockLedger[good.id] -= quantity;
+
+        itemsData.push({ good_id: good.id, quantity, price, sum });
+      }
     }
-  });
 
-  await prisma.purchase.create({
-    data: {
-      supplier_id: supChystosvit.id, doc_date: new Date('2026-04-03T11:30:00Z'), doc_number: 'ВН-2026-038', total_sum: 2350.00, status: 'Проведено',
-      items: { create: [
-        { good_id: goodSavoy.id, quantity: 10, price: 235.00, sum: 2350.00 }
-      ]}
+    if (itemsData.length > 0) {
+      await prisma.expense.create({
+        data: {
+          doc_number: `АВ-${String(i).padStart(4, '0')}`,
+          doc_date: docDate,
+          department_id: department.id,
+          responsible: department.responsible,
+          total_sum: totalSum,
+          items: { create: itemsData }
+        }
+      });
     }
-  });
+  }
 
-  await prisma.purchase.create({
-    data: {
-      supplier_id: supHimtorg.id, doc_date: new Date('2026-03-29T09:15:00Z'), doc_number: 'ВН-2026-031', total_sum: 7100.00, status: 'Проведено',
-      items: { create: [
-        { good_id: goodTide.id, quantity: 15, price: 210.00, sum: 3150.00 },
-        { good_id: goodDomestos.id, quantity: 20, price: 89.00, sum: 1780.00 },
-        { good_id: goodFairy.id, quantity: 48, price: 45.00, sum: 2160.00 } // Коробка
-      ]}
+  console.log('📊 Оновлення реальної таблиці залишків (Stock)...');
+  
+  // 6. ЗАПИС АКТУАЛЬНИХ ЗАЛИШКІВ У БАЗУ
+  for (const good of goods) {
+    if (stockLedger[good.id] > 0) {
+      await prisma.stock.create({
+        data: {
+          good_id: good.id,
+          quantity: stockLedger[good.id]
+        }
+      });
     }
-  });
+  }
 
-  // --- 5. ВИТРАТИ (з позиціями) ---
-  await prisma.expense.create({
-    data: {
-      department_id: depKitchen2.id, doc_date: new Date('2026-04-04T14:20:00Z'), doc_number: 'АВ-2026-019', responsible: depKitchen2.responsible, total_sum: 675.00,
-      items: { create: [
-        { good_id: goodFairy.id, quantity: 15, price: 45.00, sum: 675.00 }
-      ]}
-    }
-  });
-
-  await prisma.expense.create({
-    data: {
-      department_id: depPralnya.id, doc_date: new Date('2026-04-02T08:45:00Z'), doc_number: 'АВ-2026-018', responsible: depPralnya.responsible, total_sum: 1050.00,
-      items: { create: [
-        { good_id: goodTide.id, quantity: 5, price: 210.00, sum: 1050.00 }
-      ]}
-    }
-  });
-
-  await prisma.expense.create({
-    data: {
-      department_id: depSanitary1.id, doc_date: new Date('2026-04-01T16:00:00Z'), doc_number: 'АВ-2026-017', responsible: depSanitary1.responsible, total_sum: 960.00,
-      items: { create: [
-        { good_id: goodDuck.id, quantity: 10, price: 65.00, sum: 650.00 },
-        { good_id: goodChlorine.id, quantity: 5, price: 40.00, sum: 200.00 },
-        { good_id: goodDomestos.id, quantity: 1, price: 89.00, sum: 89.00 } // Частково для іншого прибирання
-      ]}
-    }
-  });
-
-  // --- 6. ЗАЛИШКИ НА СКЛАДІ ---
-  // Ми імітуємо поточні залишки згідно твого макету
-  await prisma.stock.createMany({
-    data: [
-      { good_id: goodTide.id, quantity: 15 },
-      { good_id: goodFairy.id, quantity: 8 },
-      { good_id: goodSavoy.id, quantity: 10 },
-      { good_id: goodDomestos.id, quantity: 2 },
-      { good_id: goodChlorine.id, quantity: 5 },
-      { good_id: goodDuck.id, quantity: 12 }
-    ]
-  });
-
-  console.log('✅ Базу успішно наповнено тестовими даними!');
+  console.log('✅ Базу успішно наповнено реалістичними даними!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Помилка під час наповнення:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
