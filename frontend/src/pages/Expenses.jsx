@@ -1,4 +1,3 @@
-// frontend/src/pages/Expenses.jsx
 import { useState, useEffect, useMemo } from 'react';
 import { API_URL } from '../config';
 import Topbar from '../components/Topbar';
@@ -15,11 +14,16 @@ const Expenses = () => {
   const [selectedDept, setSelectedDept] = useState('Всі підрозділи');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  // Сортування (Виправлення зауваження про сортування)
+  // Сортування
   const [sortConfig, setSortConfig] = useState({ key: 'doc_date', direction: 'desc' });
 
   const fetchFiltersData = () => {
-    fetch(`${API_URL}/departments`).then(res => res.json()).then(setDepartments);
+    fetch(`${API_URL}/departments`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setDepartments(data);
+      })
+      .catch(err => console.error(err));
   };
 
   const fetchExpenses = () => {
@@ -27,11 +31,31 @@ const Expenses = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.append('search', searchTerm);
     if (selectedDept !== 'Всі підрозділи') params.append('department', selectedDept);
-    if (selectedMonth) params.append('month', selectedMonth);
+    
+    // Перевіряємо, чи selectedMonth не порожній (на випадок очищення поля)
+    if (selectedMonth && /^\d{4}-\d{2}$/.test(selectedMonth)) {
+      params.append('month', selectedMonth);
+    }
 
     fetch(`${API_URL}/expenses?${params.toString()}`)
       .then(res => res.json())
-      .then(data => { setExpenses(data); setLoading(false); });
+      .then(data => {
+        // БЕЗПЕЧНЕ ВСТАНОВЛЕННЯ ДАНИХ
+        if (Array.isArray(data)) {
+          setExpenses(data); // Звичайна відповідь
+        } else if (data && Array.isArray(data.data)) {
+          setExpenses(data.data); // Якщо є пагінація
+        } else {
+          setExpenses([]); // Якщо прийшла помилка { error: '...' }
+          if (data?.error) console.error("Помилка від бекенду:", data.error);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Мережева помилка:", err);
+        setExpenses([]);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -46,6 +70,9 @@ const Expenses = () => {
 
   // Логіка сортування на клієнті
   const sortedExpenses = useMemo(() => {
+    // ЗАХИСТ: якщо expenses чомусь не масив, повертаємо порожній масив
+    if (!Array.isArray(expenses)) return [];
+
     let sortableItems = [...expenses];
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
@@ -53,20 +80,20 @@ const Expenses = () => {
         let bVal = b[sortConfig.key];
 
         if (sortConfig.key === 'department') {
-          aVal = a.department.name;
-          bVal = b.department.name;
+          aVal = a.department?.name || '';
+          bVal = b.department?.name || '';
         }
 
         // Числові поля — конвертуємо явно
         if (sortConfig.key === 'total_sum') {
-          aVal = Number(aVal);
-          bVal = Number(bVal);
+          aVal = Number(aVal || 0);
+          bVal = Number(bVal || 0);
         }
 
         // Дати — конвертуємо в timestamp
         if (sortConfig.key === 'doc_date') {
-          aVal = new Date(aVal).getTime();
-          bVal = new Date(bVal).getTime();
+          aVal = new Date(aVal || 0).getTime();
+          bVal = new Date(bVal || 0).getTime();
         }
 
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -110,13 +137,14 @@ const Expenses = () => {
             </thead>
             <tbody>
               {loading ? <tr><td colSpan="5" style={{textAlign:'center'}}>Завантаження...</td></tr> : 
+                sortedExpenses.length === 0 ? <tr><td colSpan="5" style={{textAlign:'center'}}>Записів не знайдено</td></tr> :
                 sortedExpenses.map(exp => (
                   <tr key={exp.id}>
                     <td className="text-id">{exp.doc_number}</td>
                     <td>{new Date(exp.doc_date).toLocaleDateString('uk-UA')}</td>
-                    <td>{exp.department.name}</td>
+                    <td>{exp.department?.name}</td>
                     <td>{exp.responsible}</td>
-                    <td style={{color:'var(--danger)', fontWeight:'500'}}>-{Number(exp.total_sum).toLocaleString()} ₴</td>
+                    <td style={{color:'var(--danger)', fontWeight:'500'}}>-{Number(exp.total_sum).toLocaleString('uk-UA')} ₴</td>
                   </tr>
                 ))
               }

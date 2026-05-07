@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
       whereClause.department = { name: department };
     }
 
-    if (month) {
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
       const startDate = new Date(`${month}-01T00:00:00.000Z`);
       const nextMonth = new Date(startDate);
       nextMonth.setMonth(nextMonth.getMonth() + 1);

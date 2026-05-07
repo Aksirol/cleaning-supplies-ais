@@ -11,8 +11,9 @@ const Stock = () => {
   // Стани для фільтрів
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Всі категорії');
+  const [selectedStatus, setSelectedStatus] = useState('Всі статуси'); // НОВИЙ СТАН ДЛЯ СТАТУСУ
 
-  // Стан для сортування (за замовчуванням за залишкам від найбільшого до найменшого)
+  // Стан для сортування
   const [sortConfig, setSortConfig] = useState({ key: 'quantity', direction: 'desc' });
 
   useEffect(() => {
@@ -28,20 +29,33 @@ const Stock = () => {
       });
   }, []);
 
-  // Динамічно отримуємо унікальні категорії з товарів
   const categories = ['Всі категорії', ...new Set(stockItems.map(item => item.good?.category).filter(Boolean))];
 
-  // 1. Спочатку фільтруємо дані
+  // 1. Функція для визначення текстового статусу (використовуємо і для фільтра, і для бейджів)
+  const getItemStatus = (quantity, minStock) => {
+    const qty = Number(quantity || 0);
+    const min = Number(minStock || 0);
+
+    if (qty === 0 || qty <= min / 2) return 'Критично';
+    if (qty <= min) return 'Мало';
+    return 'Норма';
+  };
+
+  // 2. Фільтруємо дані (тепер із підтримкою статусу)
   const filteredStock = stockItems.filter(item => {
-    // Додано безпечну перевірку наявності item.good
     if (!item.good) return false; 
     
     const matchesSearch = item.good.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'Всі категорії' || item.good.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    
+    // Перевірка статусу
+    const itemStatus = getItemStatus(item.quantity, item.good.min_stock);
+    const matchesStatus = selectedStatus === 'Всі статуси' || itemStatus === selectedStatus;
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  // 2. Потім сортуємо ВЖЕ відфільтровані дані
+  // 3. Сортуємо
   const sortedAndFilteredStock = useMemo(() => {
     let sortable = [...filteredStock];
     
@@ -50,7 +64,6 @@ const Stock = () => {
         let aVal = a[sortConfig.key];
         let bVal = b[sortConfig.key];
         
-        // Обробка вкладених властивостей (назва, категорія, мін. запас лежать в об'єкті good)
         if (sortConfig.key === 'good_name') {
           aVal = a.good?.name || '';
           bVal = b.good?.name || '';
@@ -63,8 +76,6 @@ const Stock = () => {
           aVal = Number(a.good?.min_stock || 0);
           bVal = Number(b.good?.min_stock || 0);
         }
-        
-        // Числове сортування для кількості
         if (sortConfig.key === 'quantity') {
           aVal = Number(aVal || 0);
           bVal = Number(bVal || 0);
@@ -78,24 +89,16 @@ const Stock = () => {
     return sortable;
   }, [filteredStock, sortConfig]);
 
-  // Функція зміни напрямку сортування
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
 
-  // Функція для визначення кольорової мітки статусу
-  const getStatusBadge = (quantity, minStock) => {
-    const qty = Number(quantity);
-    const min = Number(minStock);
-
-    if (qty === 0 || qty <= min / 2) {
-      return <span className="badge badge-danger">Критично</span>;
-    }
-    if (qty <= min) {
-      return <span className="badge badge-warn">Мало</span>;
-    }
+  // 4. Функція малювання бейджа на основі текстового статусу
+  const renderStatusBadge = (status) => {
+    if (status === 'Критично') return <span className="badge badge-danger">Критично</span>;
+    if (status === 'Мало') return <span className="badge badge-warn">Мало</span>;
     return <span className="badge badge-ok">Норма</span>;
   };
 
@@ -112,7 +115,6 @@ const Stock = () => {
 
       <div className="content-area">
         
-        {/* Панель фільтрів */}
         <div className="filter-bar">
           <input 
             type="text" 
@@ -129,9 +131,18 @@ const Stock = () => {
               <option key={index} value={cat}>{cat}</option>
             ))}
           </select>
+          {/* НОВИЙ ФІЛЬТР ДЛЯ СТАТУСУ */}
+          <select 
+            value={selectedStatus} 
+            onChange={(e) => setSelectedStatus(e.target.value)}
+          >
+            <option value="Всі статуси">Всі статуси</option>
+            <option value="Норма">Норма</option>
+            <option value="Мало">Мало</option>
+            <option value="Критично">Критично</option>
+          </select>
         </div>
 
-        {/* Таблиця залишків */}
         <div className="card">
           <div className="card-header">
             <span className="card-title">Залишки на складі</span>
@@ -169,16 +180,19 @@ const Stock = () => {
                   <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Товарів не знайдено</td>
                 </tr>
               ) : (
-                sortedAndFilteredStock.map((item) => (
-                  <tr key={item.id}>
-                    <td style={{ fontWeight: '500' }}>{item.good?.name}</td>
-                    <td>{item.good?.category}</td>
-                    <td>{item.good?.unit}</td>
-                    <td style={{ fontWeight: '500' }}>{Number(item.quantity)}</td>
-                    <td className="text-muted">{Number(item.good?.min_stock)}</td>
-                    <td>{getStatusBadge(item.quantity, item.good?.min_stock)}</td>
-                  </tr>
-                ))
+                sortedAndFilteredStock.map((item) => {
+                  const status = getItemStatus(item.quantity, item.good?.min_stock);
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ fontWeight: '500' }}>{item.good?.name}</td>
+                      <td>{item.good?.category}</td>
+                      <td>{item.good?.unit}</td>
+                      <td style={{ fontWeight: '500' }}>{Number(item.quantity)}</td>
+                      <td className="text-muted">{Number(item.good?.min_stock)}</td>
+                      <td>{renderStatusBadge(status)}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

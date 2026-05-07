@@ -1,4 +1,3 @@
-// frontend/src/components/AddGoodModal.jsx
 import { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 
@@ -13,25 +12,36 @@ const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
 
   // Коли відкриваємо модалку для редагування, заповнюємо поля
   useEffect(() => {
-    if (initialData) {
+    if (initialData && isOpen) {
       setFormData({
-        name: initialData.name,
-        category: initialData.category,
-        unit: initialData.unit,
-        min_stock: Number(initialData.min_stock),
+        name: initialData.name || '',
+        category: initialData.category || 'Порошки',
+        unit: initialData.unit || 'шт.',
+        min_stock: Number(initialData.min_stock || 0),
         price: Number(initialData.price || 0)
       });
-    } else {
+    } else if (isOpen) {
       // Скидання форми для створення нового
       setFormData({ name: '', category: 'Порошки', unit: 'шт.', min_stock: 0, price: 0 });
     }
   }, [initialData, isOpen]);
 
+  // ДОДАНО: Універсальна функція обробки змін в інпутах
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      // Конвертуємо в число, якщо це поля кількості або ціни
+      [name]: (name === 'min_stock' || name === 'price') ? parseFloat(value) || 0 : value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (Number(formData.price) <= 0) {
-      alert('Вкажіть ціну товару більше нуля');
+    // Валідація ціни (за потребою)
+    if (Number(formData.price) < 0) {
+      alert('Ціна не може бути від’ємною');
       return;
     }
 
@@ -44,12 +54,17 @@ const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+      
       if (response.ok) {
         onGoodSaved();
         onClose();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Помилка збереження');
       }
     } catch (error) {
-      alert('Помилка збереження');
+      console.error('Error saving good:', error);
+      alert('Помилка з’єднання з сервером');
     }
   };
 
@@ -66,7 +81,15 @@ const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
           <div className="modal-body">
             <div className="form-group">
               <label className="form-label">Назва товару *</label>
-              <input type="text" name="name" required className="form-control" placeholder="Наприклад: Мило рідке 5л" value={formData.name} onChange={handleChange} />
+              <input 
+                type="text" 
+                name="name" 
+                required 
+                className="form-control" 
+                placeholder="Наприклад: Мило рідке 5л" 
+                value={formData.name} 
+                onChange={handleChange} 
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -95,11 +118,28 @@ const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Мін. залишок *</label>
-                <input type="number" name="min_stock" required min="0" step="0.01" className="form-control" value={formData.min_stock} onChange={handleChange} />
+                <input 
+                  type="number" 
+                  name="min_stock" 
+                  required 
+                  min="0" 
+                  step="0.01" 
+                  className="form-control" 
+                  value={formData.min_stock} 
+                  onChange={handleChange} 
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Облікова ціна (грн)</label>
-                <input type="number" name="price" min="0.01" step="0.01" className="form-control" value={formData.price} onChange={handleChange} />
+                <input 
+                  type="number" 
+                  name="price" 
+                  min="0" 
+                  step="0.01" 
+                  className="form-control" 
+                  value={formData.price} 
+                  onChange={handleChange} 
+                />
               </div>
             </div>
           </div>
