@@ -113,3 +113,14 @@ model Stock {
 
   @@map("stock")
 }
+
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique @db.VarChar(50)
+  password_hash String   @db.VarChar(255)
+  role          String   @db.VarChar(20) // Наприклад: 'ADMIN', 'MANAGER', 'VIEWER'
+  full_name     String?  @db.VarChar(100)
+  created_at    DateTime @default(now())
+
+  @@map("users")
+}

@@ -4,6 +4,7 @@ const prisma = require('../db');
 
 const validate = require('../middleware/validate');
 const { goodSchema } = require('../validators/schema'); // Підключаємо правильну схему
+const { verifyToken, checkRole } = require('../middleware/auth');
 
 // PUT: Оновити дані товару
 router.put('/:id', validate(goodSchema), async (req, res) => {
@@ -54,7 +55,7 @@ router.post('/', validate(goodSchema), async (req, res) => {
 });
 
 // DELETE: Видалити товар
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, checkRole(['ADMIN']), async (req, res) => {
   try {
     await prisma.good.delete({
       where: { id: Number(req.params.id) }

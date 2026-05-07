@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
@@ -11,6 +12,30 @@ async function main() {
   await prisma.good.deleteMany();
   await prisma.supplier.deleteMany();
   await prisma.department.deleteMany();
+
+  console.log('👤 Створення користувачів системи...');
+  
+  // Пароль: admin123
+  const adminPasswordHash = await bcrypt.hash('admin123', 10);
+  await prisma.user.create({
+    data: {
+      username: 'admin',
+      password_hash: adminPasswordHash,
+      role: 'ADMIN',
+      full_name: 'Головний Адміністратор'
+    }
+  });
+
+  // Пароль: manager123
+  const managerPasswordHash = await bcrypt.hash('manager123', 10);
+  await prisma.user.create({
+    data: {
+      username: 'manager',
+      password_hash: managerPasswordHash,
+      role: 'MANAGER',
+      full_name: 'Менеджер складу'
+    }
+  });
 
   console.log('📦 Створення довідників...');
 

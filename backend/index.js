@@ -26,6 +26,7 @@ app.use('/api/goods', goodsRoutes);
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/auth', require('./routes/auth'));
 
 // Базовий тестовий маршрут
 app.get('/api/status', (req, res) => {
