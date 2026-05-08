@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { fetchWithAuth } from '../config'
 import Topbar from '../components/Topbar';
 import AddGoodModal from '../components/AddGoodModal';
 
 const Goods = () => {
+  const { user } = useOutletContext(); 
   const [goods, setGoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -121,8 +123,23 @@ const Goods = () => {
                     <td>{item.unit}</td>
                     <td>{item.price ? Number(item.price).toFixed(2) : '—'}</td>
                     <td>
-                      <span className="text-action" onClick={() => handleEdit(item)}>Редагувати</span>
-                      <span className="text-action" style={{ color: 'var(--danger)', marginLeft: '12px' }} onClick={() => handleDelete(item.id, item.name)}>Видалити</span>
+                      <span 
+                        className="text-action" 
+                        onClick={() => handleEdit(item)}
+                      >
+                        Редагувати
+                      </span>
+                      
+                      {/* Кнопку "Видалити" побачить ТІЛЬКИ Адміністратор */}
+                      {user?.role === 'ADMIN' && (
+                        <span 
+                          className="text-action" 
+                          style={{ color: 'var(--danger)', marginLeft: '12px' }} 
+                          onClick={() => handleDelete(item.id, item.name)}
+                        >
+                          Видалити
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))

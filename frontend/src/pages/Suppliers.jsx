@@ -1,10 +1,12 @@
 // frontend/src/pages/Suppliers.jsx
 import { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { fetchWithAuth } from '../config';
 import Topbar from '../components/Topbar';
 import AddSupplierModal from '../components/AddSupplierModal';
 
 const Suppliers = () => {
+  const { user } = useOutletContext();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -101,8 +103,12 @@ const Suppliers = () => {
                     <td>{sup.phone || '—'}</td>
                     <td>
                       <span className="text-action" onClick={() => handleEdit(sup)}>Редагувати</span>
-                      <span className="text-action" style={{color:'var(--danger)', marginLeft:'12px'}} 
-                        onClick={() => handleDelete(sup.id, sup.name)}>Видалити</span>
+                      
+                      {/* Сховано від менеджерів */}
+                      {user?.role === 'ADMIN' && (
+                        <span className="text-action" style={{color:'var(--danger)', marginLeft:'12px'}} 
+                          onClick={() => handleDelete(sup.id, sup.name)}>Видалити</span>
+                      )}
                     </td>
                   </tr>
                 ))

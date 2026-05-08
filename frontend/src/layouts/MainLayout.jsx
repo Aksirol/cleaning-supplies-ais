@@ -47,7 +47,8 @@ const MainLayout = ({ user, setUser }) => {
 
       {/* Основний контент */}
       <main className="main-content">
-        <Outlet />
+        {/* Передаємо об'єкт user в усі дочірні компоненти через context */}
+        <Outlet context={{ user }} />
       </main>
     </div>
   );
