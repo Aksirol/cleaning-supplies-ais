@@ -20,8 +20,8 @@ const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
   useEffect(() => {
     if (isOpen) {
       Promise.all([
-        fetch(`${API_URL}/departments`).then(res => res.json()),
-        fetchWithAuth('/goods').then(res => res.json())
+        fetchWithAuth('/departments').then(res => res.json()).then(setDepartments),
+        fetchWithAuth('/goods').then(res => res.json()).then(setGoods)
       ]).then(([deps, gds]) => {
         setDepartments(deps);
         setGoods(gds);
@@ -104,10 +104,9 @@ const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
     };
 
     try {
-      const res = await fetch(`${API_URL}/expenses`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(payload)
+      const res = await fetchWithAuth('/expenses', {
+        method: 'POST',
+        body: JSON.stringify(expensePayload)
       });
       if (!res.ok) throw new Error('Помилка збереження');
       

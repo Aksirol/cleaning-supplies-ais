@@ -22,8 +22,8 @@ const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
   useEffect(() => {
     if (isOpen) {
       Promise.all([
-        fetch(`${API_URL}/suppliers`).then(res => res.json()),
-        fetchWithAuth('/goods').then(res => res.json())
+        fetchWithAuth('/suppliers').then(res => res.json()).then(setSuppliers),
+        fetchWithAuth('/goods').then(res => res.json()).then(setGoods)
       ]).then(([sups, gds]) => {
         setSuppliers(sups);
         setGoods(gds);
@@ -103,10 +103,9 @@ const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
     };
 
     try {
-      const res = await fetch(`${API_URL}/purchases`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(payload)
+      const res = await fetchWithAuth('/purchases', {
+        method: 'POST',
+        body: JSON.stringify(purchasePayload) // Твій об'єкт даних
       });
       if (!res.ok) throw new Error('Помилка збереження');
       
