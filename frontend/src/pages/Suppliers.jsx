@@ -1,6 +1,6 @@
 // frontend/src/pages/Suppliers.jsx
 import { useState, useEffect, useMemo } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 import Topbar from '../components/Topbar';
 import AddSupplierModal from '../components/AddSupplierModal';
 
@@ -15,7 +15,7 @@ const Suppliers = () => {
   const fetchSuppliers = () => {
     setLoading(true);
     const query = searchTerm ? `?search=${searchTerm}` : '';
-    fetch(`${API_URL}/suppliers${query}`)
+    fetchWithAuth(`/suppliers${query}`)
       .then(res => res.json())
       .then(data => { setSuppliers(data); setLoading(false); });
   };
@@ -59,7 +59,7 @@ const Suppliers = () => {
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Видалити контрагента "${name}"?`)) return;
-    const res = await fetch(`${API_URL}/suppliers/${id}`, { method: 'DELETE' });
+    const res = await fetchWithAuth(`/suppliers/${id}`, { method: 'DELETE' });
     if (res.ok) fetchSuppliers();
     else {
       const err = await res.json();

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 import Topbar from '../components/Topbar';
 import AddExpenseModal from '../components/AddExpenseModal';
 
@@ -18,7 +18,7 @@ const Expenses = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'doc_date', direction: 'desc' });
 
   const fetchFiltersData = () => {
-    fetch(`${API_URL}/departments`)
+    fetchWithAuth('/departments')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setDepartments(data);
@@ -37,7 +37,7 @@ const Expenses = () => {
       params.append('month', selectedMonth);
     }
 
-    fetch(`${API_URL}/expenses?${params.toString()}`)
+    fetchWithAuth(`/expenses?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         // БЕЗПЕЧНЕ ВСТАНОВЛЕННЯ ДАНИХ

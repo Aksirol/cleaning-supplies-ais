@@ -1,6 +1,6 @@
 // frontend/src/components/AddSupplierModal.jsx
 import { useState, useEffect } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 
 const AddSupplierModal = ({ isOpen, onClose, onSupplierSaved, initialData = null }) => {
   const [formData, setFormData] = useState({

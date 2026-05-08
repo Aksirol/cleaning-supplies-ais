@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 
 const AddGoodModal = ({ isOpen, onClose, onGoodSaved, initialData = null }) => {
   const [formData, setFormData] = useState({

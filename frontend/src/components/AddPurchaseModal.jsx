@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 
 const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
   // Дані для випадаючих списків
@@ -23,7 +23,7 @@ const AddPurchaseModal = ({ isOpen, onClose, onPurchaseAdded }) => {
     if (isOpen) {
       Promise.all([
         fetch(`${API_URL}/suppliers`).then(res => res.json()),
-        fetch(`${API_URL}/goods`).then(res => res.json())
+        fetchWithAuth('/goods').then(res => res.json())
       ]).then(([sups, gds]) => {
         setSuppliers(sups);
         setGoods(gds);

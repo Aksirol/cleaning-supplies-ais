@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'; // Обов'язково додано useMemo
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 import Topbar from '../components/Topbar';
 import AddPurchaseModal from '../components/AddPurchaseModal';
 
@@ -26,7 +26,7 @@ const Purchases = () => {
 
   // Завантажуємо список постачальників для фільтра
   useEffect(() => {
-    fetch(`${API_URL}/suppliers`)
+    fetchWithAuth(`/suppliers`)
       .then(res => res.json())
       .then(setSuppliersList)
       .catch(err => console.error('Помилка завантаження постачальників:', err));
@@ -44,7 +44,7 @@ const Purchases = () => {
     if (selectedSupplier !== 'Всі постачальники') params.append('supplier', selectedSupplier);
     if (selectedMonth) params.append('month', selectedMonth);
 
-    fetch(`${API_URL}/purchases?${params.toString()}`)
+    fetchWithAuth(`/purchases?${params.toString()}`)
       .then(res => res.json())
       .then(response => {
         setPurchases(response.data || []);

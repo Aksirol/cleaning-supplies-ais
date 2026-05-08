@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 
 const Stock = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const Stock = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'quantity', direction: 'desc' });
 
   useEffect(() => {
-    fetch(`${API_URL}/stock`)
+    fetchWithAuth(`/stock`)
       .then(res => res.json())
       .then(data => {
         setStockItems(data);

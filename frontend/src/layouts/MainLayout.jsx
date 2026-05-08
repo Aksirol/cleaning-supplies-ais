@@ -1,77 +1,70 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  ArrowUpRight, 
-  Package, 
-  BookOpen, 
-  Users, 
-  BarChart2 
-} from 'lucide-react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 
-const MainLayout = () => {
+const MainLayout = ({ user, setUser }) => {
+  const navigate = useNavigate();
+
+  // Функція виходу з системи
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/login');
+  };
+
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Бокова панель (Sidebar) */}
-      <aside style={{ 
-        width: '260px', 
-        backgroundColor: 'var(--bg-sidebar)', 
-        borderRight: '1px solid var(--border-color)',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
-          <h2 style={{ fontSize: '18px', margin: 0 }}>АІС «Миючі засоби»</h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Облік ТОВ «Чистота»</p>
+    <div className="layout">
+      {/* Бокове меню (Sidebar) */}
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <h2>AIS Cleaning</h2>
         </div>
-
-        <nav style={{ padding: '10px 0', flex: 1, overflowY: 'auto' }}>
-          <div style={{ padding: '10px 20px', fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Головне</div>
-          <SidebarItem to="/" icon={<LayoutDashboard size={20} />} label="Панель керування" />
-          
-          <div style={{ padding: '10px 20px', fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '10px' }}>Облік</div>
-          <SidebarItem to="/purchases" icon={<ShoppingCart size={20} />} label="Закупівлі" />
-          <SidebarItem to="/expenses" icon={<ArrowUpRight size={20} />} label="Витрати" />
-          <SidebarItem to="/stock" icon={<Package size={20} />} label="Склад" />
-
-          <div style={{ padding: '10px 20px', fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '10px' }}>Довідники</div>
-          <SidebarItem to="/goods" icon={<BookOpen size={20} />} label="Товари" />
-          <SidebarItem to="/suppliers" icon={<Users size={20} />} label="Постачальники" />
-
-          <div style={{ padding: '10px 20px', fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '10px' }}>Звіти</div>
-          <SidebarItem to="/analytics" icon={<BarChart2 size={20} />} label="Аналітика" />
+        
+        <nav className="nav-menu">
+          <NavLink to="/" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Дашборд</NavLink>
+          <NavLink to="/purchases" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Закупівлі</NavLink>
+          <NavLink to="/stock" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Склад</NavLink>
+          <NavLink to="/expenses" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Витрати</NavLink>
+          <NavLink to="/goods" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Довідник товарів</NavLink>
+          <NavLink to="/suppliers" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Постачальники</NavLink>
+          <NavLink to="/analytics" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Аналітика</NavLink>
         </nav>
+
+        {/* НОВИЙ БЛОК: Профіль користувача */}
+        <div style={styles.userProfile}>
+          <div style={styles.userInfo}>
+            <div style={styles.userName}>{user?.full_name || user?.username}</div>
+            <div style={styles.userRole}>
+              <span className={`badge ${user?.role === 'ADMIN' ? 'badge-warn' : 'badge-ok'}`}>
+                {user?.role}
+              </span>
+            </div>
+          </div>
+          <button onClick={handleLogout} className="btn" style={styles.logoutBtn}>
+            Вийти
+          </button>
+        </div>
       </aside>
 
-      {/* Основна робоча область */}
-      {/* Основна робоча область */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)', overflowY: 'auto' }}>
-        <Outlet /> 
+      {/* Основний контент */}
+      <main className="main-content">
+        <Outlet />
       </main>
     </div>
   );
 };
 
-// Допоміжний компонент для посилань у меню
-const SidebarItem = ({ to, icon, label }) => {
-  return (
-    <NavLink 
-      to={to} 
-      style={({ isActive }) => ({
-        display: 'flex',
-        alignItems: 'center',
-        padding: '12px 20px',
-        color: isActive ? '#fff' : 'var(--text-muted)',
-        backgroundColor: isActive ? 'var(--accent-blue)' : 'transparent',
-        transition: 'all 0.2s',
-        gap: '12px',
-        borderLeft: isActive ? '4px solid #fff' : '4px solid transparent'
-      })}
-    >
-      {icon}
-      <span>{label}</span>
-    </NavLink>
-  );
+// Прості стилі для блоку користувача (щоб не засмічувати CSS)
+const styles = {
+  userProfile: {
+    marginTop: 'auto', // Притискаємо до низу
+    padding: '16px',
+    borderTop: '1px solid var(--border-color)',
+    backgroundColor: 'var(--bg-main)',
+  },
+  userInfo: { marginBottom: '12px' },
+  userName: { fontWeight: '600', color: 'var(--text-main)', fontSize: '14px', marginBottom: '4px' },
+  userRole: { fontSize: '12px' },
+  logoutBtn: { width: '100%', fontSize: '13px', padding: '8px' }
 };
 
 export default MainLayout;

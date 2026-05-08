@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/analytics/dashboard`)
+    fetchWithAuth(`/analytics/dashboard`)
       .then(res => res.json())
       .then(analyticsData => {
         setData(analyticsData);

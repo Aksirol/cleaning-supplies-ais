@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config';
 
 const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
   const [departments, setDepartments] = useState([]);
@@ -21,7 +21,7 @@ const AddExpenseModal = ({ isOpen, onClose, onExpenseAdded }) => {
     if (isOpen) {
       Promise.all([
         fetch(`${API_URL}/departments`).then(res => res.json()),
-        fetch(`${API_URL}/goods`).then(res => res.json())
+        fetchWithAuth('/goods').then(res => res.json())
       ]).then(([deps, gds]) => {
         setDepartments(deps);
         setGoods(gds);

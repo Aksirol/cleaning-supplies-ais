@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { API_URL } from '../config';
+import { fetchWithAuth } from '../config'
 import Topbar from '../components/Topbar';
 import AddGoodModal from '../components/AddGoodModal';
 
@@ -12,8 +12,8 @@ const Goods = () => {
 
   const fetchGoods = () => {
     setLoading(true);
-    fetch(`${API_URL}/goods`)
-      .then((res) => res.json())
+    fetchWithAuth('/goods') // API_URL вже підставляється всередині!
+    .then((res) => res.json())
       .then((data) => {
         setGoods(data);
         setLoading(false);
@@ -33,7 +33,7 @@ const Goods = () => {
     if (!window.confirm(`Ви впевнені, що хочете видалити "${name}"?`)) return;
     
     try {
-      const response = await fetch(`${API_URL}/goods/${id}`, { method: 'DELETE' });
+      const response = await fetchWithAuth(`/goods/${id}`, { method: 'DELETE' });
       const data = await response.json();
       
       if (!response.ok) {
