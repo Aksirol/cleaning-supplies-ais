@@ -43,6 +43,7 @@ app.use('/api/goods', verifyToken, goodsRoutes);
 app.use('/api/departments', verifyToken, departmentsRoutes);
 app.use('/api/stock', verifyToken, stockRoutes);
 app.use('/api/analytics', verifyToken, analyticsRoutes);
+app.use('/api/users', require('./routes/users'));
 
 // Запуск сервера
 app.listen(PORT, () => {

@@ -27,6 +27,12 @@ const MainLayout = ({ user, setUser }) => {
           <NavLink to="/goods" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Довідник товарів</NavLink>
           <NavLink to="/suppliers" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Постачальники</NavLink>
           <NavLink to="/analytics" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>Аналітика</NavLink>
+
+          {user?.role === 'ADMIN' && (
+            <NavLink to="/users" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+              Користувачі
+            </NavLink>
+          )}
         </nav>
 
         {/* НОВИЙ БЛОК: Профіль користувача */}

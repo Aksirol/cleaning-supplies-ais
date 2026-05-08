@@ -9,6 +9,7 @@ import Stock from './pages/Stock';
 import Expenses from './pages/Expenses';
 import Analytics from './pages/Analytics';
 import Login from './pages/Login';
+import Users from './pages/Users';
 
 function App() {
   // Стан для зберігання поточного користувача
@@ -62,6 +63,9 @@ function App() {
           <Route path="stock" element={<Stock />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="users" element={
+            user?.role === 'ADMIN' ? <Users /> : <Navigate to="/" replace />
+          } />
         </Route>
         
         {/* Будь-який інший шлях перекидає на головну */}
